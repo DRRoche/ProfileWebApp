@@ -6,14 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
-        body {text-align: center;}
-        #enterDetails {float: left; width: 50%;  background-color: darkslategray; color: floralwhite;}
-        #findDetails {float: left; width: 50%; background-color: floralwhite; color: darkslategray;}
+        body {text-align: center; background-color: #528265}
+        #enterDetails {background-color: darkslategray; color: floralwhite;}
+        #findDetails {background-color: floralwhite; color: darkslategray;}
+		.level2 {float: left; width: 50%; height: 370px}
+		#embeddedWebApp {align-item: bottom}
         input {width: 120px;}
+		.level3 {float: left; width: 50%;}
     </style>
 </head>
 <body>
-    <div id="enterDetails">
+	<div id="banner" class="level1">
+		<img src="LogoBanner.png">
+	</div>
+    <div id="enterDetails" class = "level2">
         <h1>Enter details</h1>
 
         <h4>ID</h4> 
@@ -30,7 +36,7 @@
         <button id="remove">REMOVE</button> <br><br>
     </div>
 
-    <div id="findDetails">
+    <div id="findDetails" class = "level2">
         <h1>Find by ID</h1>
         <h4>ID</h4>
         <input id="findID" type="text"> <br><br>
@@ -39,7 +45,20 @@
         <h3 id="findAge" type="number"></h3> <br><br>
     </div>
 	
-    <iframe src="https://thunkable.site/w/ypSSKYuxmE0RSz217nPCE" title="Profile App" height = 1000 width = 500></iframe>
+    <div id="embeddedApp" class="level3">
+		<iframe src="https://thunkable.site/w/ypSSKYuxmE0RSz217nPCE" title="Profile App" height = 720 width = 500></iframe>
+	</div>
+	
+	<div id="userInfo" class="level3">
+		<h1>User Info</h2>
+		<button id="prevBtn">Prev</button>
+		<button id="nextBtn">Next</button>
+		<h3 id="displayName" type="text"></h3>
+		<h3 id="displayAge" type="number"></h3>
+		<h3 id="displayGender" type="text"></h3>
+		<h3 id="displayHobby" type="text"></h3>
+		<img id="displayImg" width="349" height="465"></img>
+	</div>
 	
     <script type="module">
 		// Import the functions you need from the SDKs you need
@@ -64,11 +83,15 @@
 		// Initialize Firebase
 		const app = initializeApp(firebaseConfig);
 		const analytics = getAnalytics(app);
+		const users = ["HVM6iaBiDGSbVykpXsUOVdgT2tS2", "fS2Ucf1u5pfrmZskyIGVT9LseAD2"];
+		var currentUser = 0;
    
         import {getDatabase, set, get, update, remove, ref, child}
         from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
+		
+		import {getAuth} from "https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js";
         
-        const db = getDatabase();
+        const db = getDatabase();		
 
         var enterID = document.querySelector("#enterID");
         var enterName = document.querySelector("#enterName");
@@ -76,11 +99,59 @@
         var findID = document.querySelector("#findID");
         var findName = document.querySelector("#findName");
         var findAge = document.querySelector("#findAge");
+		var displayName = document.querySelector("#displayName");
+		var displayAge = document.querySelector("#displayAge");
+		var displayGender = document.querySelector("#displayGender");
+		var displayHobby = document.querySelector("#displayHobby");
       
         var insertBtn = document.querySelector("#insert");
         var updateBtn = document.querySelector("#update");
         var removeBtn = document.querySelector("#remove");
         var findBtn = document.querySelector("#find");
+		var prevBtn = document.querySelector("#prevBtn");
+		var nextBtn = document.querySelector("#nextBtn");
+		
+		function NextUser(){
+			if(currentUser > (users.length - 2)){
+				currentUser = Number(0);
+				DisplayUser(currentUser);
+			} else {
+				currentUser = (currentUser + 1);
+				DisplayUser(currentUser);
+			}
+			
+		}
+		
+		function PrevUser(){
+			if(currentUser == 0){
+				currentUser = (users.length - 1);
+				DisplayUser(currentUser);
+			} else {
+				currentUser = currentUser - 1;
+				DisplayUser(currentUser);
+			}
+			
+		}
+		
+		function DisplayUser(user) {
+			const dbref = ref(db);
+			
+			get(child(dbref, users[user]))
+            .then((snapshot)=>{
+                if(snapshot.exists()){
+                    displayName.innerHTML = "Name: " + snapshot.val().name;
+                    displayAge.innerHTML = "Age: " + snapshot.val().age;
+					displayGender.innerHTML = "Gender: " + snapshot.val().gender;
+					displayHobby.innerHTML = "Favorite Hobby: " + snapshot.val().hobby;
+					displayImg.src = snapshot.val().image;
+                } else {
+                    alert("No data found");
+                }
+            })
+            .catch((error)=>{
+                alert(error)
+            })			
+		}
 
         function InsertData() {
             set(ref(db, "People/"+ enterID.value),{
@@ -97,8 +168,8 @@
         }
 
         function FindData() {
-            const dbref = ref(db);
-
+			const dbref = ref(db);
+						
             get(child(dbref, "People/" + findID.value))
             .then((snapshot)=>{
                 if(snapshot.exists()){
@@ -141,6 +212,8 @@
         updateBtn.addEventListener('click', UpdateData);
         removeBtn.addEventListener('click', RemoveData);
         findBtn.addEventListener('click', FindData);
+		nextBtn.addEventListener('click', function (){NextUser()});
+		prevBtn.addEventListener('click', function (){PrevUser()});
 
       </script>
 </body>
